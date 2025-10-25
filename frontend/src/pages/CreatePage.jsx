@@ -1,14 +1,48 @@
 import React from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { ArrowLeftIcon } from "lucide-react";
 import { useState } from "react";
+import toast from "react-hot-toast";
+import axios from "axios";
+import api from "../lib/axios";
 
 const CreatePage = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = () => {};
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!title.trim() || !content.trim()) {
+      toast.error("All fields are required");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await api.post("/notes", {
+        title,
+        content,
+      });
+      toast.success("Note created successfully");
+      navigate("/");
+    } catch (error) {
+      console.log("Error creating note", error);
+      if (error.response.status === 429) {
+        toast.error("Slow down. Creating notes too fast.", {
+          duration: 4000,
+          icon: "💀",
+        });
+      } else {
+        toast.error("Failed to create note");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-base-200">
       <div className="container mx-auto px-4 py-8">
@@ -18,7 +52,7 @@ const CreatePage = () => {
             Back to Notes
           </Link>
 
-          <div className="card bg-surface p-6 shadow-md rounded-2xl">
+          <div className="card bg-base-100 p-6 shadow-md rounded-2xl">
             <div className="card-body space-y-6">
               <h2 className="text-2xl font-semibold">Create new note</h2>
 
